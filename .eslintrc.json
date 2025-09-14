@@ -1,0 +1,26 @@
+{
+   "root": true,
+   "env": {
+      "node": true,
+      "mocha": true
+   },
+   "parser": "@typescript-eslint/parser",
+   "plugins": [
+      "@typescript-eslint"
+   ],
+   "extends": [
+      "eslint:recommended",
+      "plugin:@typescript-eslint/recommended"
+   ],
+   "rules": {
+      // for some reason, default eslint rules doesn't conform with ts behavior which we mimic here
+      "@typescript-eslint/no-unused-vars": [
+         "warn",
+         {
+            "argsIgnorePattern": "^_",
+            "varsIgnorePattern": "^_",
+            "caughtErrorsIgnorePattern": "^_"
+         }
+      ]
+   }
+}
