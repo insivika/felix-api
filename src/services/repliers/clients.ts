@@ -40,12 +40,19 @@ export interface RplClientsCreateDto {
    tags?: string[];
    externalId?: number;
 }
-export interface RplClientsCreateRequest extends RplClientsCreateDto, ApiRequest {}
-export interface RplClientsCreateResponse extends ApiResponse, RplClientsClient {}
-export interface RplClientsUpdateDto extends Omit<RplClientsCreateDto, "email"> {
+export interface RplClientsCreateRequest
+   extends RplClientsCreateDto,
+      ApiRequest {}
+export interface RplClientsCreateResponse
+   extends ApiResponse,
+      RplClientsClient {}
+export interface RplClientsUpdateDto
+   extends Omit<RplClientsCreateDto, "email"> {
    clientId: number;
 }
-export interface RplClientsUpdateRequest extends RplClientsUpdateDto, ApiRequest {}
+export interface RplClientsUpdateRequest
+   extends RplClientsUpdateDto,
+      ApiRequest {}
 export interface RplClientsUpdateResponse extends ApiResponse {}
 export interface RplClientsDeleteResponse extends ApiResponse {}
 export interface RplClientsGetResponse extends ApiResponse, RplClientsClient {}
@@ -67,7 +74,9 @@ export interface RplClientsFilterDto {
    showEstimates?: boolean;
    externalId?: string;
 }
-export interface RplClientsFilterRequest extends RplClientsFilterDto, ApiRequest {}
+export interface RplClientsFilterRequest
+   extends RplClientsFilterDto,
+      ApiRequest {}
 export interface RplClientsFilterResponse extends ApiResponse {
    page: number;
    numPages: number;
@@ -80,22 +89,34 @@ export interface RplClientsRenameTagDto {
    tag: string;
    label: string;
 }
-export interface RplClientsRenameTagRequest extends RplClientsRenameTagDto, ApiRequest {}
+export interface RplClientsRenameTagRequest
+   extends RplClientsRenameTagDto,
+      ApiRequest {}
 export interface RplClientsRenameTagResponse extends ApiResponse {}
 @injectable()
 export default class RepliersClients extends RepliersBase {
    create(params: RplClientsCreateRequest) {
-      return this.request<RplClientsCreateResponse>("POST", `/clients`, {}, params);
+      return this.request<RplClientsCreateResponse>(
+         "POST",
+         `/clients`,
+         {},
+         params
+      );
    }
    update(params: RplClientsUpdateRequest) {
-      const {
-         clientId,
-         ...updates
-      } = params;
-      return this.request<RplClientsUpdateResponse>("PATCH", `/clients/${clientId}`, {}, updates);
+      const { clientId, ...updates } = params;
+      return this.request<RplClientsUpdateResponse>(
+         "PATCH",
+         `/clients/${clientId}`,
+         {},
+         updates
+      );
    }
    delete(clientId: number) {
-      return this.request<RplClientsDeleteResponse>("DELETE", `/clients/${clientId}`);
+      return this.request<RplClientsDeleteResponse>(
+         "DELETE",
+         `/clients/${clientId}`
+      );
    }
    get(clientId: number) {
       return this.request<RplClientsGetResponse>("GET", `/clients/${clientId}`);
@@ -107,8 +128,13 @@ export default class RepliersClients extends RepliersBase {
       return this.request<RplClientsGetTagsResponse>("GET", "/clients/tags");
    }
    renameTag(params: RplClientsRenameTagRequest) {
-      return this.request<RplClientsRenameTagResponse>("PATCH", `/clients/tags/${params.tag}`, {}, {
-         label: params.label
-      });
+      return this.request<RplClientsRenameTagResponse>(
+         "PATCH",
+         `/clients/tags/${params.tag}`,
+         {},
+         {
+            label: params.label,
+         }
+      );
    }
 }

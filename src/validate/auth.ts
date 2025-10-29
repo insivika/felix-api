@@ -1,43 +1,50 @@
 import joi from "joi";
-import { emailSchema, phoneSchema } from "./common.js";
-export const userOtpSchema = joi.object<UserOtpDto>().keys({
-   code: joi.string().length(6).required()
-}).required().label("otp");
-export const userLoginSchema = joi.object<UserLoginDto>().keys({
-   email: emailSchema,
-   phone: phoneSchema
-}).or('email', 'phone').required().label("credentials");
+import { emailSchema } from "./common.js";
+export const userOtpSchema = joi
+   .object<UserOtpDto>()
+   .keys({
+      code: joi.string().length(6).required(),
+   })
+   .required()
+   .label("otp");
+export const userLoginSchema = joi
+   .object<UserLoginDto>()
+   .keys({
+      identifier: joi.string().email().required(),
+      password: joi.string().min(6),
+   })
+   .required()
+   .label("credentials");
 export interface UserLoginDto {
-   email?: string;
-   phone?: string;
+   identifier: string;
+   password?: string;
 }
 export interface UserOtpDto {
    code: string;
 }
 export const userSignupSchema = joi.object<UserSignupDto>().keys({
-   fname: joi.string().required(),
-   lname: joi.string().required(),
+   username: joi.string().required(),
+   firstName: joi.string().required(),
+   lastName: joi.string().required(),
    email: emailSchema.required(),
-   phone: phoneSchema,
-   referer: joi.string()
+   password: joi.string().min(6).required(),
 });
 export interface UserSignupDto {
+   username: string;
    email: string;
-   fname: string;
-   lname: string;
-   // password: string;
-   phone?: string;
-   referer: string;
+   firstName: string;
+   lastName: string;
+   password: string;
 }
 export const authRepliersTokenSchema = joi.object<AuthRepliersTokenDto>().keys({
-   token: joi.string().uuid().required()
+   token: joi.string().uuid().required(),
 });
 export interface AuthRepliersTokenDto {
    token: string;
 }
 export const authEmbedSchema = joi.object<AuthEmbedDto>().keys({
    context: joi.string().required(),
-   signature: joi.string().required()
+   signature: joi.string().required(),
 });
 export interface AuthEmbedDto {
    context: string;

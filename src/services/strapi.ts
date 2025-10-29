@@ -1,0 +1,191 @@
+import axios, { AxiosInstance } from "axios";
+import { inject, injectable } from "tsyringe";
+import type { Logger } from "pino";
+import type { AppConfig } from "../config.js";
+import { ApiError } from "../lib/errors.js";
+
+export interface StrapiRegisterDto {
+   username: string;
+   email: string;
+   password: string;
+   firstName?: string;
+   lastName?: string;
+}
+
+export interface StrapiLoginDto {
+   identifier: string; // email or username
+   password: string;
+}
+
+export interface StrapiAuthResponse {
+   jwt: string;
+   user: {
+      id: number;
+      username: string;
+      email: string;
+      confirmed: boolean;
+      blocked: boolean;
+      createdAt: string;
+      updatedAt: string;
+      firstName?: string;
+      lastName?: string;
+   };
+}
+
+export interface StrapiUser {
+   id: number;
+   username: string;
+   email: string;
+   provider: string;
+   confirmed: boolean;
+   blocked: boolean;
+   createdAt: string;
+   updatedAt: string;
+   firstName?: string;
+   lastName?: string;
+}
+
+@injectable()
+export default class StrapiService {
+   private client: AxiosInstance;
+
+   constructor(
+      @inject("logger") private logger: Logger,
+      @inject("config") private config: AppConfig
+   ) {
+      this.client = axios.create({
+         baseURL: config.strapi.base_url,
+         timeout: config.strapi.timeout_ms || 5000,
+         headers: {
+            "Content-Type": "application/json",
+         },
+      });
+   }
+
+   /**
+    * Register a new user in Strapi
+    */
+   async register(data: StrapiRegisterDto): Promise<StrapiAuthResponse> {
+      try {
+         const response = await this.client.post<StrapiAuthResponse>(
+            "/api/auth/local/register",
+            data
+         );
+         return response.data;
+      } catch (error: any) {
+         this.logger.error(
+            { error: error.response?.data },
+            "[StrapiService: register]: Failed to register user"
+         );
+
+         // Handle specific Strapi errors
+         if (error.response?.status === 400) {
+            const strapiError =
+               error.response?.data?.error?.message || "Registration failed";
+            throw new ApiError(strapiError, 400);
+         }
+
+         throw new ApiError("Registration service unavailable", 503);
+      }
+   }
+
+   /**
+    * Login a user in Strapi
+    */
+   async login(data: StrapiLoginDto): Promise<StrapiAuthResponse> {
+      try {
+         const response = await this.client.post<StrapiAuthResponse>(
+            "/api/auth/local",
+            data
+         );
+         return response.data;
+      } catch (error: any) {
+         this.logger.error(
+            { error: error.response?.data },
+            "[StrapiService: login]: Failed to login user"
+         );
+
+         if (error.response?.status === 400) {
+            throw new ApiError("Invalid credentials", 401);
+         }
+
+         throw new ApiError("Authentication service unavailable", 503);
+      }
+   }
+
+   /**
+    * Get user by JWT token
+    */
+   async getMe(token: string): Promise<StrapiUser> {
+      try {
+         const response = await this.client.get<StrapiUser>("/api/users/me", {
+            headers: {
+               Authorization: `Bearer ${token}`,
+            },
+         });
+         return response.data;
+      } catch (error: any) {
+         this.logger.error(
+            { error: error.response?.data },
+            "[StrapiService: getMe]: Failed to get user info"
+         );
+
+         if (error.response?.status === 401) {
+            throw new ApiError("Invalid or expired token", 401);
+         }
+
+         throw new ApiError("Authentication service unavailable", 503);
+      }
+   }
+
+   /**
+    * Send password reset email
+    */
+   async forgotPassword(email: string): Promise<{ ok: boolean }> {
+      try {
+         const response = await this.client.post("/api/auth/forgot-password", {
+            email,
+         });
+         return response.data;
+      } catch (error: any) {
+         this.logger.error(
+            { error: error.response?.data },
+            "[StrapiService: forgotPassword]: Failed to send reset email"
+         );
+
+         throw new ApiError("Password reset service unavailable", 503);
+      }
+   }
+
+   /**
+    * Reset password with code
+    */
+   async resetPassword(
+      code: string,
+      password: string,
+      passwordConfirmation: string
+   ): Promise<StrapiAuthResponse> {
+      try {
+         const response = await this.client.post<StrapiAuthResponse>(
+            "/api/auth/reset-password",
+            {
+               code,
+               password,
+               passwordConfirmation,
+            }
+         );
+         return response.data;
+      } catch (error: any) {
+         this.logger.error(
+            { error: error.response?.data },
+            "[StrapiService: resetPassword]: Failed to reset password"
+         );
+
+         if (error.response?.status === 400) {
+            throw new ApiError("Invalid or expired reset code", 400);
+         }
+
+         throw new ApiError("Password reset service unavailable", 503);
+      }
+   }
+}
