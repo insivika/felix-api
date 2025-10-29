@@ -230,6 +230,7 @@ export interface AppConfig {
    strapi: {
       base_url: string;
       timeout_ms: number;
+      api_key: string;
    };
 }
 const proximitySearchConfig = {
@@ -575,6 +576,7 @@ const config: AppConfig = {
    strapi: {
       base_url: process.env["STRAPI_BASE_URL"] || "http://localhost:1337",
       timeout_ms: parseInt(process.env["STRAPI_TIMEOUT_MS"] || "5000"),
+      api_key: process.env["STRAPI_API_KEY"] || "", // Add this line
    },
 };
 

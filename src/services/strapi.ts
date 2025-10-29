@@ -43,6 +43,7 @@ export interface StrapiUser {
    updatedAt: string;
    firstName?: string;
    lastName?: string;
+   clientId?: number;
 }
 
 @injectable()
@@ -135,6 +136,26 @@ export default class StrapiService {
          }
 
          throw new ApiError("Authentication service unavailable", 503);
+      }
+   }
+
+   /**
+    * Update user in Strapi
+    */
+   async updateUser(id: number, data: Partial<StrapiUser>): Promise<void> {
+      try {
+         await this.client.put(`/api/users/${id}`, data, {
+            headers: {
+               Authorization: `Bearer ${this.config.strapi.api_key}`,
+            },
+         });
+      } catch (error: any) {
+         this.logger.error(
+            { error: error.response?.data },
+            "[StrapiService: update]: Failed to update user"
+         );
+
+         throw new ApiError("Update service unavailable", 503);
       }
    }
 

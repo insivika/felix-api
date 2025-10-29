@@ -441,10 +441,23 @@ export default class AuthService {
          throw new ApiError("Failed to create or retrieve user", 500);
       }
 
+      try {
+         // Update the user in Strapi
+         await this.strapiService.updateUser(strapiAuth.user.id, {
+            clientId: userInfo.clientId,
+         });
+      } catch (error: any) {
+         this.logger.error(
+            { error: error.response?.data },
+            "[AuthService: signup]: Failed to update user in Strapi"
+         );
+         throw new ApiError("Failed to update user in Strapi", 500);
+      }
+
       const profile = _.pick(
          {
-            ...userInfo,
             ...strapiAuth.user,
+            ...userInfo,
          },
          userProfilKeys
       ) as UserProfile;
