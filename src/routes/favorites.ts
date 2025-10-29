@@ -49,7 +49,7 @@ router.post(
       ctx.state["enable.xff"] = true;
       const { error, value } = favoritesCreateSchema.validate({
          ...ctx.request.body,
-         clientId: ctx.state["user"].sub,
+         clientId: ctx.state["user"].clientId,
       });
       if (error) {
          ctx.throw(new ApiError(error.message, 400));
@@ -93,9 +93,7 @@ router.get("/", authMiddleware, async (ctx) => {
    ctx.state["enable.xff"] = true;
    const favoritesService = ctx.state.container.resolve(FavoritesService);
 
-   console.log("user in favorites route ===>", ctx.state["user"]);
-
-   ctx.body = await favoritesService.get(ctx.state["user"].sub);
+   ctx.body = await favoritesService.get(ctx.state["user"].clientId);
 });
 
 /**
@@ -121,7 +119,7 @@ router.get("/", authMiddleware, async (ctx) => {
 router.delete("/:favoriteId", authMiddleware, async (ctx) => {
    ctx.state["enable.xff"] = true;
    const { error, value } = favoritesDeleteSchema.validate({
-      clientId: ctx.state["user"].sub,
+      clientId: ctx.state["user"].clientId,
       favoriteId: ctx.params["favoriteId"],
    });
    if (error) {

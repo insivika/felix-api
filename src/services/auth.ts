@@ -71,7 +71,7 @@ export const agentProfilKeys: Array<keyof AgentProfile> = [
    "status",
 ];
 export interface AuthResponseDto {
-   user: UserProfile;
+   user: UserProfile | undefined;
    token: string | undefined;
 }
 export type AuthLoginResponseDto =
@@ -181,7 +181,7 @@ export default class AuthService {
 
       return {
          token: undefined,
-         user: null,
+         user: undefined,
       };
 
       // // Otherwise, fall back to existing OTP flow

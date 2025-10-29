@@ -3,14 +3,22 @@ import { container } from "tsyringe";
 import { Middleware } from "koa-jwt";
 import { ApiError } from "../lib/errors.js";
 import SearchesService from "../services/searches.js";
-import { searchesCreateSchema, searchesDeleteSchema, searchesGetSchema, searchesUpdateSchema, searchsFilterSchema } from "../validate/searches.js";
+import {
+   searchesCreateSchema,
+   searchesDeleteSchema,
+   searchesGetSchema,
+   searchesUpdateSchema,
+   searchsFilterSchema,
+} from "../validate/searches.js";
 import type { EventsCollectionMiddleware } from "../providers/middleware/eventsCollection.js";
 import SelectSaveSearchParams from "../services/eventsCollection/selectors/selectSaveSearchParams.js";
 const router = new Router({
-   prefix: "/searches"
+   prefix: "/searches",
 });
 const authMiddleware = container.resolve<Middleware>("middleware.jwt");
-const authMiddlewarePassthrough = container.resolve<Middleware>("middleware.jwt.passthrough");
+const authMiddlewarePassthrough = container.resolve<Middleware>(
+   "middleware.jwt.passthrough"
+);
 
 /**
  * @openapi
@@ -34,30 +42,37 @@ const authMiddlewarePassthrough = container.resolve<Middleware>("middleware.jwt.
  *          401:
  *             $ref: '#/components/responses/Unauthorized'
  */
-router.post("/", authMiddleware, async (ctx, next) => {
-   ctx.state['enable.xff'] = true;
-   const {
-      error,
-      value
-   } = searchesCreateSchema.validate({
-      ...ctx.request.body,
-      clientId: ctx.state["user"].sub
-   });
-   if (error) {
-      ctx.throw(new ApiError(error.message, 400));
-      return;
+router.post(
+   "/",
+   authMiddleware,
+   async (ctx, next) => {
+      ctx.state["enable.xff"] = true;
+      const { error, value } = searchesCreateSchema.validate({
+         ...ctx.request.body,
+         clientId: ctx.state["user"].clientId,
+      });
+      if (error) {
+         ctx.throw(new ApiError(error.message, 400));
+         return;
+      }
+      const searchesService = ctx.state.container.resolve(SearchesService);
+      ctx.body = await searchesService.create(value);
+      next();
+   },
+   (ctx, next) => {
+      const eventsCollectionMiddleware =
+         ctx.state.container.resolve<EventsCollectionMiddleware>(
+            "middleware.eventsCollection"
+         );
+      const selectSaveSearchParams = ctx.state.container.resolve(
+         SelectSaveSearchParams
+      );
+      const showPropertyEventsCollector = eventsCollectionMiddleware({
+         selector: selectSaveSearchParams.select,
+      });
+      return showPropertyEventsCollector(ctx, next);
    }
-   const searchesService = ctx.state.container.resolve(SearchesService);
-   ctx.body = await searchesService.create(value);
-   next();
-}, (ctx, next) => {
-   const eventsCollectionMiddleware = ctx.state.container.resolve<EventsCollectionMiddleware>("middleware.eventsCollection");
-   const selectSaveSearchParams = ctx.state.container.resolve(SelectSaveSearchParams);
-   const showPropertyEventsCollector = eventsCollectionMiddleware({
-      selector: selectSaveSearchParams.select
-   });
-   return showPropertyEventsCollector(ctx, next);
-});
+);
 
 /**
  * @openapi
@@ -85,15 +100,12 @@ router.post("/", authMiddleware, async (ctx, next) => {
  *          401:
  *             $ref: '#/components/responses/Unauthorized'
  */
-router.patch("/:searchId", authMiddleware, async ctx => {
-   ctx.state['enable.xff'] = true;
-   const {
-      error,
-      value
-   } = searchesUpdateSchema.validate({
+router.patch("/:searchId", authMiddleware, async (ctx) => {
+   ctx.state["enable.xff"] = true;
+   const { error, value } = searchesUpdateSchema.validate({
       ...ctx.request.body,
       searchId: ctx.params["searchId"],
-      clientId: ctx.state["user"].sub
+      clientId: ctx.state["user"].clientId,
    });
    if (error) {
       ctx.throw(new ApiError(error.message, 400));
@@ -118,13 +130,10 @@ router.patch("/:searchId", authMiddleware, async ctx => {
  *          401:
  *             $ref: '#/components/responses/Unauthorized'
  */
-router.get("/", authMiddleware, async ctx => {
-   ctx.state['enable.xff'] = true;
-   const {
-      error,
-      value
-   } = searchsFilterSchema.validate({
-      clientId: ctx.state["user"].sub
+router.get("/", authMiddleware, async (ctx) => {
+   ctx.state["enable.xff"] = true;
+   const { error, value } = searchsFilterSchema.validate({
+      clientId: ctx.state["user"].clientId,
    });
    if (error) {
       ctx.throw(new ApiError(error.message, 400));
@@ -153,14 +162,11 @@ router.get("/", authMiddleware, async ctx => {
  *          401:
  *             $ref: '#/components/responses/Unauthorized'
  */
-router.delete("/:searchId", authMiddleware, async ctx => {
-   ctx.state['enable.xff'] = true;
-   const {
-      error,
-      value
-   } = searchesDeleteSchema.validate({
+router.delete("/:searchId", authMiddleware, async (ctx) => {
+   ctx.state["enable.xff"] = true;
+   const { error, value } = searchesDeleteSchema.validate({
       searchId: ctx.params["searchId"],
-      clientId: ctx.state["user"].sub
+      clientId: ctx.state["user"].clientId,
    });
    if (error) {
       ctx.throw(new ApiError(error.message, 400));
@@ -195,13 +201,10 @@ router.delete("/:searchId", authMiddleware, async ctx => {
  *          401:
  *             $ref: '#/components/responses/Unauthorized'
  */
-router.get("/:searchId", authMiddlewarePassthrough, async ctx => {
-   ctx.state['enable.xff'] = true;
-   const {
-      error,
-      value
-   } = searchesGetSchema.validate({
-      searchId: ctx.params["searchId"]
+router.get("/:searchId", authMiddlewarePassthrough, async (ctx) => {
+   ctx.state["enable.xff"] = true;
+   const { error, value } = searchesGetSchema.validate({
+      searchId: ctx.params["searchId"],
    });
    if (error) {
       ctx.throw(new ApiError(error.message, 400));
