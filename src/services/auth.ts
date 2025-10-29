@@ -36,21 +36,24 @@ export type AgentProfile = Pick<
    RplAgentsAgent,
    "email" | "fname" | "lname" | "phone" | "status"
 >;
-export type UserProfile = Pick<
-   StrapiUser,
-   | "id"
-   | "username"
-   | "email"
-   | "firstName"
-   | "lastName"
-   | "confirmed"
-   | "blocked"
-   | "createdAt"
-   | "updatedAt"
->;
+export type UserProfile =
+   | Pick<RplClientsClient, "clientId">
+   | Pick<
+        StrapiUser,
+        | "id"
+        | "firstName"
+        | "lastName"
+        | "email"
+        | "username"
+        | "confirmed"
+        | "blocked"
+        | "createdAt"
+        | "updatedAt"
+     >;
 
-export const userProfilKeys: Array<keyof UserProfile> = [
+export const userProfilKeys = [
    "id",
+   "clientId",
    "username",
    "firstName",
    "lastName",
@@ -59,7 +62,8 @@ export const userProfilKeys: Array<keyof UserProfile> = [
    "blocked",
    "createdAt",
    "updatedAt",
-];
+] as const;
+
 export const agentProfilKeys: Array<keyof AgentProfile> = [
    "fname",
    "lname",
@@ -168,6 +172,7 @@ export default class AuthService {
             params.identifier,
             params.password
          );
+
          return {
             token: result.token,
             user: result.user,
@@ -228,15 +233,17 @@ export default class AuthService {
             externalId: strapiAuth.user.id.toString(),
          });
 
-         console.log("strapiAuth ===>", strapiAuth);
-         console.log("repliers result ===>", result);
-
-         return {
-            token: strapiAuth.jwt as string,
-            user: {
+         const profile = _.pick(
+            {
                ...result.clients[0],
                ...strapiAuth.user,
             },
+            userProfilKeys
+         );
+
+         return {
+            token: strapiAuth.jwt as string,
+            user: profile,
          };
       } catch (error) {
          throw error;
@@ -381,7 +388,8 @@ export default class AuthService {
       }
 
       // 2. Create or update user in Repliers system
-      let userInfo: RplClientsCreateResponse;
+      let userInfo: RplClientsCreateResponse | RplClientsGetResponse | null =
+         null;
       try {
          userInfo = await this.clients.create({
             agentId: this.config.repliers.clients.defaultAgentId,
@@ -422,14 +430,28 @@ export default class AuthService {
                },
                status: true,
             });
+
+            userInfo = await this.clients.get(existingUser.clientId);
          } else {
             throw error;
          }
       }
 
+      if (!userInfo) {
+         throw new ApiError("Failed to create or retrieve user", 500);
+      }
+
+      const profile = _.pick(
+         {
+            ...userInfo,
+            ...strapiAuth.user,
+         },
+         userProfilKeys
+      ) as UserProfile;
+
       return {
          token: strapiAuth.jwt as string,
-         user: _.pick(strapiAuth.user, userProfilKeys),
+         user: profile,
       };
    }
    async useRepliersToken(params: AuthRepliersTokenDto) {
