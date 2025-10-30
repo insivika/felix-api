@@ -237,7 +237,6 @@ export default class StrapiService {
    async getArticles({
       pageNum,
       pageSize,
-      categoryId,
       isFeatured = false,
    }: ArticlesParams = {}): Promise<ArticlesResponse> {
       try {
@@ -300,17 +299,19 @@ export default class StrapiService {
    /**
     * Get article category by slug
     */
-   async getArticleCategory(slug: string): Promise<any | null> {
+   async getArticleCategories(): Promise<any | null> {
       try {
-         const uri = `/api/article-categories?slug=${slug}`;
+         const uri = `/api/article-categories`;
 
-         const response = await this.client.get<any[]>(uri, {
+         const { data } = await this.client.get<any[]>(uri, {
             headers: {
                Authorization: `Bearer ${this.config.strapi.api_key}`,
             },
          });
 
-         return response.data[0] || null;
+         console.log(data);
+
+         return data;
       } catch (error: any) {
          this.logger.error(
             { error: error.response?.data },

@@ -124,17 +124,12 @@ router.get("/articles/:slug", async (ctx) => {
  *          404:
  *             description: Category not found
  */
-router.get("/categories/:slug", async (ctx) => {
+router.get("/article-categories", async (ctx) => {
    const strapiService = container.resolve(StrapiService);
-   const { slug } = ctx.params;
 
-   const category = await strapiService.getArticleCategory(slug);
+   const categories = await strapiService.getArticleCategories();
 
-   if (!category) {
-      throw new ApiError("Category not found", 404);
-   }
-
-   ctx.body = category;
+   ctx.body = categories;
 });
 
 export default router;
