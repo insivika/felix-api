@@ -124,12 +124,40 @@ router.get("/articles/:slug", async (ctx) => {
  *          404:
  *             description: Category not found
  */
+/**
+ * @openapi
+ * /api/content/article-categories:
+ *    get:
+ *       tags:
+ *          - Content
+ *       summary: Get article categories
+ *       responses:
+ */
+/**
+ * @openapi
+ * /api/content/article-categories/{slug}:
+ *    get:
+ *       tags:
+ *          - Content
+ *       summary: Get an article category by slug
+ */
 router.get("/article-categories", async (ctx) => {
    const strapiService = container.resolve(StrapiService);
 
    const categories = await strapiService.getArticleCategories();
 
    ctx.body = categories;
+});
+
+router.get("/article-categories/:slug", async (ctx) => {
+   const strapiService = container.resolve(StrapiService);
+   const { slug } = ctx.params;
+
+   const category = await strapiService.getArticleCategoryBySlug(
+      slug as string
+   );
+
+   ctx.body = category;
 });
 
 export default router;

@@ -297,7 +297,7 @@ export default class StrapiService {
    }
 
    /**
-    * Get article category by slug
+    * Get article categories
     */
    async getArticleCategories(): Promise<any | null> {
       try {
@@ -316,6 +316,30 @@ export default class StrapiService {
          this.logger.error(
             { error: error.response?.data },
             "[StrapiService: getArticleCategory]: Failed to fetch article category"
+         );
+
+         return null;
+      }
+   }
+
+   /**
+    * Get article category by slug
+    */
+   async getArticleCategoryBySlug(slug: string): Promise<any | null> {
+      try {
+         const uri = `/api/article-categories/${slug}`;
+
+         const { data } = await this.client.get<any[]>(uri, {
+            headers: {
+               Authorization: `Bearer ${this.config.strapi.api_key}`,
+            },
+         });
+
+         return data;
+      } catch (error: any) {
+         this.logger.error(
+            { error: error.response?.data },
+            "[StrapiService: getArticleCategoryBySlug]: Failed to fetch article category"
          );
 
          return null;
