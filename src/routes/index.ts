@@ -4,16 +4,17 @@ import authRouter from "./auth.js";
 import autosuggestRouter from "./autosuggest.js";
 import favoritesRouter from "./favorites.js";
 import contactsRouter from "./contact.js";
-import searchesRouter from './searches.js';
-import userRouter from './user.js';
-import estimateRouter from './estimate.js';
-import statsRouter from './stats.js';
-import vtourRouter from './vtour.js';
-import agentRouter from './agent.js';
-import adminRouter from './admin.js';
-import webookRouter from './webhooks/index.js';
+import searchesRouter from "./searches.js";
+import userRouter from "./user.js";
+import estimateRouter from "./estimate.js";
+import statsRouter from "./stats.js";
+import vtourRouter from "./vtour.js";
+import agentRouter from "./agent.js";
+import adminRouter from "./admin.js";
+import webookRouter from "./webhooks/index.js";
+import contentRouter from "./content.js";
 const router = new Router({
-   prefix: "/api"
+   prefix: "/api",
 });
 router.use(authRouter.routes(), authRouter.allowedMethods());
 router.use(listingsRouter.routes(), listingsRouter.allowedMethods());
@@ -28,4 +29,5 @@ router.use(vtourRouter.routes(), vtourRouter.allowedMethods());
 router.use(agentRouter.routes(), agentRouter.allowedMethods());
 router.use(adminRouter.routes(), adminRouter.allowedMethods());
 router.use(webookRouter.routes(), webookRouter.allowedMethods());
+router.use(contentRouter.routes(), contentRouter.allowedMethods());
 export default router;

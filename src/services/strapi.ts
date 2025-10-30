@@ -46,6 +46,27 @@ export interface StrapiUser {
    clientId?: number;
 }
 
+export interface ArticlesParams {
+   pageNum?: number;
+   pageSize?: number;
+   categoryId?: string;
+   isFeatured?: boolean;
+}
+
+export interface ArticlesResponse {
+   data: any[];
+   meta: {
+      pagination: {
+         page: number;
+         pageSize: number;
+         total: number;
+         pageCount: number;
+      };
+   };
+}
+
+const ARTICLES_PAGE_SIZE = 10;
+
 @injectable()
 export default class StrapiService {
    private client: AxiosInstance;
@@ -207,6 +228,96 @@ export default class StrapiService {
          }
 
          throw new ApiError("Password reset service unavailable", 503);
+      }
+   }
+
+   /**
+    * Get articles with optional pagination and category filtering
+    */
+   async getArticles({
+      pageNum,
+      pageSize,
+      categoryId,
+      isFeatured = false,
+   }: ArticlesParams = {}): Promise<ArticlesResponse> {
+      try {
+         let articlesUri = `/api/articles?pagination[page]=${pageNum}&pagination[pageSize]=${pageSize}&_sort=createdAt:DESC`;
+         if (isFeatured === true) {
+            articlesUri += `&filters[isFeatured][$eq]=true`;
+         }
+
+         const articles = await this.client.get<ArticlesResponse>(articlesUri, {
+            headers: {
+               Authorization: `Bearer ${this.config.strapi.api_key}`,
+            },
+         });
+
+         return articles.data;
+      } catch (error: any) {
+         this.logger.error(
+            { error: error.response?.data },
+            "[StrapiService: getArticles]: Failed to fetch articles"
+         );
+
+         return {
+            data: [],
+            meta: {
+               pagination: {
+                  page: 0,
+                  pageSize: 0,
+                  total: 0,
+                  pageCount: 0,
+               },
+            },
+         };
+      }
+   }
+
+   /**
+    * Get a single article by slug
+    */
+   async getArticleBySlug(slug: string): Promise<any | null> {
+      try {
+         const uri = `/api/articles/${slug}`;
+
+         const response = await this.client.get<any[]>(uri, {
+            headers: {
+               Authorization: `Bearer ${this.config.strapi.api_key}`,
+            },
+         });
+
+         return response.data || null;
+      } catch (error: any) {
+         this.logger.error(
+            { error: error.response?.data },
+            "[StrapiService: getArticleBySlug]: Failed to fetch article"
+         );
+
+         return null;
+      }
+   }
+
+   /**
+    * Get article category by slug
+    */
+   async getArticleCategory(slug: string): Promise<any | null> {
+      try {
+         const uri = `/api/article-categories?slug=${slug}`;
+
+         const response = await this.client.get<any[]>(uri, {
+            headers: {
+               Authorization: `Bearer ${this.config.strapi.api_key}`,
+            },
+         });
+
+         return response.data[0] || null;
+      } catch (error: any) {
+         this.logger.error(
+            { error: error.response?.data },
+            "[StrapiService: getArticleCategory]: Failed to fetch article category"
+         );
+
+         return null;
       }
    }
 }
