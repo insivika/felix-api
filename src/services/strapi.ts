@@ -345,4 +345,34 @@ export default class StrapiService {
          return null;
       }
    }
+   /**
+    * Get reviews
+    */
+
+   async getReviews({
+      pageNum,
+      pageSize,
+   }: {
+      pageNum: number;
+      pageSize: number;
+   }): Promise<any | null> {
+      try {
+         const uri = `/api/reviews?pagination[page]=${pageNum}&pagination[pageSize]=${pageSize}&_sort=createdAt:DESC`;
+
+         const { data } = await this.client.get<any[]>(uri, {
+            headers: {
+               Authorization: `Bearer ${this.config.strapi.api_key}`,
+            },
+         });
+
+         return data;
+      } catch (error: any) {
+         this.logger.error(
+            { error: error.response?.data },
+            "[StrapiService: getReviews]: Failed to fetch reviews"
+         );
+
+         return null;
+      }
+   }
 }

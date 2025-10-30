@@ -160,4 +160,28 @@ router.get("/article-categories/:slug", async (ctx) => {
    ctx.body = category;
 });
 
+/**
+ * @openapi
+ * /api/content/reviews:
+ *    get:
+ *       tags:
+ *          - Content
+ *       summary: Get reviews
+ */
+router.get("/reviews", async (ctx) => {
+   const strapiService = container.resolve(StrapiService);
+
+   const pageNum = ctx.query["page"];
+   const pageSize = ctx.query["pageSize"];
+
+   const reviews = await strapiService.getReviews({
+      pageNum: pageNum ? parseInt(pageNum as string, 10) : 1,
+      pageSize: pageSize ? parseInt(pageSize as string, 10) : 10,
+   });
+
+   console.log(reviews);
+
+   ctx.body = reviews;
+});
+
 export default router;
